@@ -1,0 +1,150 @@
+
+1.  데이터베이스 연동
+    - JDBC
+      현재 4장에서 사용하는 것임.
+      java(애플리케이션)에 sql 문장(문자열)을 작성 후, 
+      MySql 서버에 전송해서 실행.
+
+      비즈니스 로직(java code)과 sql 문장(문자열)이 혼재하게 됨.
+
+    - SQL mapper
+      jdbc 에서의 sql 부분만을 분리해서 관리.
+      slq 문장별로 관리 ID를 부여해서 ID를 사용해서 DB 서버와 접속하게 됨.
+
+      MyBatis 와 같은 제품을 사용하게 됨.
+      
+    - ORM
+      객체 관계 매핑 프레임워크임.
+
+      JPA 와 같은 제품을 사용하게 됨.
+
+2. JDBC
+   2.1 개론
+        자바에서 제공하는 관계형 데이터베이스 연동을 위한 API.
+
+   2.2 구성
+       java application - JDBC - (mysql, h2, oracle)
+                                 Driver(전용 SW) - 각 벤더별 RDBMS
+
+       Driver는 JAVA JDBC(Interface) 의 구현체임.
+       따라서, JDBC 를 각 벤더에서 구현한지 않으면,
+       JAva 단에서 각 벤더에 맞게끔 접속을 구현하여야 함으로 
+       db가 변경이 될 때마다 접속관 관련된 코드를 항상 수정을 해야만함.
+
+       하지만, JDBC를 기반으로 각 벤더에서 전용 접속 sw 인 DRIVER를
+       구현하게 되면, java 단에서는 JDBC만 통하면 각 벤더의
+       RDBMS에 손쉽게 접속할 수 있게 됨.
+
+   2.3 구현
+       - jdbc api 사용
+         java.sql pakage 의 interface, class, exception을 사용하게 됨.
+
+       - h2 db에 접속
+         a. h2 database에서 제공해주는 diver 를 객체로 등록.
+         b. Connection 객체를 받아옴.( 로그인이 성공된 session )
+         c. SQL 문장을 사용하기 위한 객체 받아옴.
+            PrepareStatement : Mysql Dynamic SQL
+               bind - execute - patch
+               
+               사용되는 SQL 예.
+               selct * from tmp where id = ?;
+
+            Statement : Dynamic SQL 이 아닌 일반 SQL
+               sql 작성 - parse - bind - execute - patch
+
+         d. PrepareStatement 를 이용해서 SQL 실행
+            - select
+              PrepareStatement.executeQuery()
+
+              조회된 결과는 RecordSet 객체로 반환이 됨.
+
+            - insert, update, delete
+              PrepareStatement.executeUpdate()
+
+         e. 자원 해제
+            RecordSet, PrepareStatement, Connection
+
+
+   2.4 애플리케이션 구조
+       - 사용자 관리
+         등록(C), 수정(U), 삭제(D), 조회(R)
+
+         4가지의 트랜잭션은 사용자 관리 기능에 해당됨.
+         사용자 관리를 위한 클래스를 만들면 좋겠다고 생각.
+
+         - DB완 관련된 멤버
+         - SQL 문장
+         - CURD에 해당하는 멤버함수
+
+         등록 기능(함수) : ID, PW, NAME, ROLE
+         수정 기능(함수) : ID, PW, NAME, ROLE
+         삭제 기능(함수) : ID
+         조회 기능(함수) : ID
+
+         관리해야 할 사용자 정보가 점진적으로 추가됨. => 관련된 함수의 매개변수가 늘어남.
+         => 유지보수에 문제, 함수를 호출해서 사용시 전달되는 매개변수에 대해서 실수 가능성.
+
+         그래서, 매개변수만 관리하는 Class가 있으면 좋겠다.
+
+       - 필요한 클래스
+         a. 사용자 관리용 Class
+         b. 매개변수용 Class
+
+
+            SQL 실행 절차
+              - selct * from tmp where id = 1;
+              - parse
+                문법검사, 권한검사, 실행계획
+              - bind
+                변수에 설정된 값을 SQL 문장에 적용
+              - execute
+                하드 디스크의 block 에서 버퍼에 저장
+
+                table -> tablespace -> file -> disk io -> 버퍼(실제)
+
+                버퍼 부족 -> 가상 메모리 -> 하드 디스크 -> disk io
+
+              - patch
+                원하는 데이터를 추출
+
+            실행한 SQL 문장 관리(RDBMS)
+              - selct * from tmp where id = 1;
+              - SQL 실행 절차를 거쳐서 실행이 정상적으로 됨.
+              - 서버에 실행되어던 문장을 기억하고 있음.
+              - 동일한 문장이 서버에 도착하면,
+                서버는 바로 execute 단계로 넘어가게 됨.
+
+
+
+3. 사용자 요청 처리
+   3.1 개요
+       - 전체 처리 흐름
+         HTML(화면) - servlet(java) - JDBC - H2 database
+
+         4장에서 "java - JDBC - H2 database" 연동이 되고 있는 상태.
+
+       - 화면의 요청 처리
+         HTML(화면) - servlet
+
+         HTML 화면(p.147)에서 사용자가 입력한 데이터를 servlet 로 받아서 처리하는 것.
+
+         a. 하나의 값을 전달
+         b. 두 개 이상의 값이 전달 ( input type="checkbox" )
+         c. 각 입력 요소(tag)의 name 속성을 반드시 지정.
+
+         servlet 에서 화면 요소의 값을 취득
+
+         a. doPost(request, response) 매개변수의 request 객체를 사용.
+         b. request 객체에 인코딩 메소드를 사용 지정. UTF-8 설정
+         c. HTML 화면 요소의  name 속성의 값을 이용해서 사용자 입력 데이터 취득
+            - 입력요소의 값이 하나
+              request.getParameter(name 속성의 값);
+            - 입력요소의 값이 두 개 이상인 경우
+              request.getParameterValues(name 속성의 값);
+
+         servlet 에서 수신한 request 의 각 화면 요소의 값을 UserVO 에 저장.
+         UserDAO.insertUser(vo);
+
+
+
+

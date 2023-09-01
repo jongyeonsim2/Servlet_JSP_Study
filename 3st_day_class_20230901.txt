@@ -1,0 +1,144 @@
+  1. 웹서버 VS 웹애플리케이션
+
+     1.1 Web Server(웹서버) 제품
+         Apache Server, 
+         Nginx, 
+         IIS : MS 제품, Windows 서버용,
+         WebToB : Tmax Soft(국산),
+         Google Web Server
+
+     1.2 Servlet Container( WAS : Web Application Server )
+         Apache Tomcat,
+         Websphere : IBM,
+         WebLogic : Oracle,
+         JBoss : RedHat, 
+         Jeus : Tmax Soft(국산)
+
+  2. Servlet API
+     2.1 HttpServletRequest, HttpServletResponse
+         
+         http 요청 -> apache web server -> server container ->
+
+         server container HttpServletRequest 객체 생성 ->
+         LoginServlet 객체 생성 -> Request 객체, Response 객체 전달
+         doPost() or doGet() or service() 의 매개변수로 전달
+
+         Response.getWriter() 를 이용해서 PrintWriter 객체를 취득.
+         PrintWriter.println() 를 이용해서 html 문자열을 출력. ->
+         요청한 client의 브라우저로 html 을 전송.
+
+     2.2 ServletConfig, ServletContext
+         
+         - servlet 을 위한 데이터 관리
+           request 및 response 에 대한 인코딩 정보와 같은 부분을 등록 관리.
+
+         - ServletContext 
+           
+           ServletContext는 각각의 web application을 위한 servlet api.
+
+           그래서, request, response 와 같은 servlet api 는
+           해당 servlet 하나를 위한 servlet api.
+
+           web server - web application( servlet container )
+                      - ERP(회계) web app. - 의 전용 ServletContext 
+                      - wms(창고관리) web app. - 의 전용 ServletContext 
+                      - crm(고객관리) web app. - 의 전용 ServletContext
+                      - shop(쇼핑몰) web app. - 의 전용 ervletContext
+
+           ServletContext 는 서블릿 컨테이너와 통신하기 위해서 사용되는 
+           메소드를 지원하는 인터페이스임.
+
+           서블릿 컨테이너가 시작될 때 웹 서버에 등록된 웹 애플리케이션 단위로
+           하나의 ServletContext 객체가 자동으로 생성됨.
+
+           그래서, 웹 애플리케이션의 서비스가 중지될 때 ServletContext 객체도
+           소멸됨. 따라서, 웹 애플리케이션의 생명주기와 동일함.
+
+           그리고, 웹 애플리케이션 내의 모든 서블릿과 JSP 간의 데이터를 공유
+           할 수 있게 됨.
+
+           ServletContext 객체를 간단하게 웹 컨텍스트 또는 컨텍스트라고도 함.
+
+
+
+
+         - 초기화 매개변수 설정 방법 #1,  방법 #2,  방법 #3
+           
+           방법 #1,  방법 #2,  방법 #3 단점
+
+           방법 #1 
+                ServletConfig 를 사용할 수 있도록 하기 위해 init() 메소드를
+                모든 servlet 에 구현. 동일한 코드를 모든 servlet에 작성하게 됨.
+
+                web.xml에 설정한 이름 정보가 수정이 되면, 모든 init() 를 수정해야 할
+                수도 있음.
+
+                web.xml 을 수정을 하기 때문에, servlet container 가 다시 읽어야 함.
+
+                ServletConfig 를 이용해서 web.xml의 등록 정보를 사용할 수 있기 때문에
+                Servlet 객체가 생성시 ServletConfig 도 함께 생성하게 됨으로,
+                web.xml 의 등록정보를 사용하기 위해서 비용이 많이 들게됨.
+
+           방법 #2 
+                초기화 매개변수를 등록하려면 항상 eclipse 기능을 이용해야 함.
+
+
+
+         - 방법 #1
+         - ServletConfig
+           ServletConfig 는 Servlet 하나 당 하나의 객체로 생성이 됨.
+
+
+           sevlet 에서 사용하고 싶은 정보를 web.xml 에 등록  ->
+           ( 예, 인코딩 정보, UTF-8 )   => 여기까지는 개발자가 담당.
+
+
+           servlet container 가 web.xml 에 설정한 인코딩 정보를 확인 ->
+           servlet container 가 ServletConfig 객체를 생성 후 
+           인코딩 정보를 설정.           => servlet container 담당.
+
+
+           ServletConfig 객체를 받아서 사용하면 됨.
+           - 방법 1
+             init() 생명주기 메소드를 현재 구현하고 있는 servlet 에 오버라이딩
+
+           - 방법 2
+             GenericServlet의 getServletConfig() 를 이용해서 취득
+
+             InsertUserServlet -> HttpServlet -> GenericServlet -> Servlet
+
+
+
+
+         - 방법 #2
+           이클립스의 서블릿 위저드
+
+         - 방법 #3
+           어노테이션
+
+
+  3. 게시판
+     
+     - 입력 화면(html) -> 글 등록 servlet -> 리스트 화면 전환 -> 리스트 조회 servlet
+     - 리스트 화면 -> 상세글 조회 servlet -> 글 수정 servlet -> 리스트 조회 servlet
+                                       -> 글 삭제 servlet -> 리스트 조회 servlet
+     
+     - lombok lib 를 사용해서 VO 의 getter/setter 를 자동 생성하도록 함.
+       다운로드 주소 : https://projectlombok.org/
+
+     - html, servlet, DAO(DB연동), VO
+
+     - 화면 전환을 위해 사용되는 API
+       Request.getRequestDispatcher("/요청경로");
+       RequestDispatcher.forward(request, response);
+       
+           
+           
+
+
+
+
+
+
+
+
